@@ -116,6 +116,19 @@ const config = convict({
       default: 'x-cdp-request-id',
       env: 'TRACING_HEADER'
     }
+  },
+  orgApiCodes: {
+    doc: 'The Org API Codes given to external developers, this variable is stored as a comma separated, base64 encoded secret and is injected into the docker container in CDP environments',
+    format: Array,
+    default: [],
+    env: 'ORG_API_CODES',
+    coerce: (value) =>
+      atob(value)
+        .split(',')
+        .map((value) => {
+          const valueParts = value.split('=')
+          return { apiCode: valueParts[0], organisationId: valueParts[0] }
+        })
   }
 })
 
