@@ -2,8 +2,10 @@ import convict from 'convict'
 import convictFormatWithValidator from 'convict-format-with-validator'
 
 import { convictValidateMongoUri } from './common/helpers/convict/validate-mongo-uri.js'
+import { convictValidateOrgApiCodes } from './common/helpers/convict/validate-org-api-codes.js'
 
 convict.addFormat(convictValidateMongoUri)
+convict.addFormat(convictValidateOrgApiCodes)
 convict.addFormats(convictFormatWithValidator)
 
 const isProduction = process.env.NODE_ENV === 'production'
@@ -119,16 +121,9 @@ const config = convict({
   },
   orgApiCodes: {
     doc: 'The Org API Codes given to external developers, this variable is stored as a comma separated, base64 encoded secret and is injected into the docker container in CDP environments',
-    format: Array,
+    format: 'org-api-codes',
     default: [],
-    env: 'ORG_API_CODES',
-    coerce: (value) =>
-      atob(value)
-        .split(',')
-        .map((value) => {
-          const valueParts = value.split('=')
-          return { apiCode: valueParts[0], organisationId: valueParts[0] }
-        })
+    env: 'ORG_API_CODES'
   }
 })
 

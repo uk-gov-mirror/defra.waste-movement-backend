@@ -3,6 +3,8 @@ import { receiptMovementSchema } from '../schemas/receipt.js'
 import Joi from 'joi'
 import { HTTP_STATUS_CODES } from '../common/constants/http-status-codes.js'
 import { updatePlugins } from './update-plugins.js'
+import { validateRequestOrgIdMatchesOriginalOrgId } from '../common/helpers/validate-api-code.js'
+import { config } from '../config.js'
 
 const updateReceiptMovement = {
   method: 'PUT',
@@ -21,6 +23,15 @@ const updateReceiptMovement = {
   },
   handler: async (request, h) => {
     const { wasteTrackingId } = request.params
+    const orgApiCodes = config.get('orgApiCodes')
+
+    validateRequestOrgIdMatchesOriginalOrgId(
+      request.payload.movement.apiCode,
+      wasteTrackingId,
+      request.db,
+      orgApiCodes
+    )
+
     const result = await updateWasteInput(
       request.db,
       wasteTrackingId,

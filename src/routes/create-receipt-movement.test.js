@@ -15,6 +15,7 @@ import { requestLogger } from '../common/helpers/logging/request-logger.js'
 import { generateWasteTrackingId } from '../test/generate-waste-tracking-id.js'
 import { HTTP_STATUS_CODES } from '../common/constants/http-status-codes.js'
 import { createWasteInput } from '../services/movement-create.js'
+import { config } from '../config.js'
 
 jest.mock('../services/movement-create.js', () => {
   const { createWasteInput: actualFunction } = jest.requireActual(
@@ -36,6 +37,7 @@ describe('movement Route Tests', () => {
     const testMongo = await createTestMongoDb()
     mongoClient = testMongo.client
     testMongoDb = testMongo.db
+    config.set('orgApiCodes', btoa('qwe=qwe,asd=asd,zxc=zxc'))
   })
 
   afterAll(async () => {
@@ -51,7 +53,8 @@ describe('movement Route Tests', () => {
       movement: {
         receivingSiteId: 'string',
         receiverReference: 'string',
-        specialHandlingRequirements: 'string'
+        specialHandlingRequirements: 'string',
+        apiCode: 'asd'
       }
     }
 
@@ -82,7 +85,8 @@ describe('movement Route Tests', () => {
       movement: {
         receivingSiteId: 'string',
         receiverReference: 'string',
-        specialHandlingRequirements: 'string'
+        specialHandlingRequirements: 'string',
+        apiCode: 'asd'
       }
     }
 
@@ -99,12 +103,12 @@ describe('movement Route Tests', () => {
     expect(statusCode).toEqual(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR)
     expect(result).toEqual({
       statusCode: HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR,
-      error: 'Unexpected error',
+      error: 'Error',
       message: errorMessage
     })
   })
 
-  it('does not create waste input when validation fails', async () => {
+  it('does not create waste input when movement is missing', async () => {
     const wasteTrackingId = generateWasteTrackingId()
     const invalidPayload = {
       // Missing required 'movement' field
@@ -123,5 +127,30 @@ describe('movement Route Tests', () => {
       .findOne({ _id: wasteTrackingId })
 
     expect(actualWasteInput).toBeNull()
+  })
+
+  it('rejects when apiCode is invalid', async () => {
+    const wasteTrackingId = generateWasteTrackingId()
+    const payload = {
+      movement: {
+        receivingSiteId: 'string',
+        receiverReference: 'string',
+        specialHandlingRequirements: 'string',
+        apiCode: 'invalid'
+      }
+    }
+
+    const { statusCode, result } = await server.inject({
+      method: 'POST',
+      url: `/movements/${wasteTrackingId}/receive`,
+      payload
+    })
+
+    expect(statusCode).toEqual(HTTP_STATUS_CODES.BAD_REQUEST)
+    expect(result).toEqual({
+      statusCode: HTTP_STATUS_CODES.BAD_REQUEST,
+      error: 'ValidationError',
+      message: 'apiCode must be valid'
+    })
   })
 })
