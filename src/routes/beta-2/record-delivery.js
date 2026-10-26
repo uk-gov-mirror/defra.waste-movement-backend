@@ -84,7 +84,6 @@ const recordDelivery = {
           validation: { warnings: [] }
         })
         .code(HTTP_STATUS.CREATED)
-        .header('x-request-id', traceId)
         .message('Successfully recorded a delivery')
     } catch (error) {
       return handleBetaRouteError(error)

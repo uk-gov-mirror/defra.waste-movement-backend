@@ -29,15 +29,7 @@ const recordReceipt = {
     description: 'Record receipt of waste against a delivery',
     notes: 'Records receipt of the waste delivered under the given delivery.',
     validate: {
-      payload: withPayloadChecks(
-        validateRequest('receipt/record-receipt-request'),
-        emptyIsNotProvided(receiptDateTime),
-        notInFuture(receiptDateTime)
-      ),
       params: validateRequest('receipt/delivery-id-params')
-    },
-    response: {
-      status: { 201: validateResponse('receipt/record-receipt-response') }
     }
   },
   handler: async (request, h) => {
@@ -61,9 +53,8 @@ const recordReceipt = {
       })
 
       return h
-        .response({ data: { deliveryId }, validation: { warnings: [] } })
-        .code(HTTP_STATUS.CREATED)
-        .header('x-request-id', traceId)
+        .response({ data: { id: deliveryId }, validation: { warnings: [] } })
+        .code(200)
         .message('Successfully recorded a receipt')
     } catch (error) {
       return handleBetaRouteError(error)

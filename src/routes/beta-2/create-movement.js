@@ -40,6 +40,7 @@ const createMovement = {
     try {
       const traceId = getTraceId() || randomUUID()
       const orgId = getOrganisationId(request)
+      logger.info(`First reference: ${request.payload.supportingReferences[0].label}`)
       const movementId = await createMovementId()
 
       await backOff(

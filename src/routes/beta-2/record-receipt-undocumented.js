@@ -42,11 +42,6 @@ const recordReceiptUndocumented = {
         emptyIsNotProvided(receiptDateTime),
         notInFuture(receiptDateTime)
       )
-    },
-    response: {
-      status: {
-        201: validateResponse('receipt/record-receipt-undocumented-response')
-      }
     }
   },
   handler: async (request, h) => {
@@ -71,7 +66,7 @@ const recordReceiptUndocumented = {
       )
 
       return h
-        .response({ data: { deliveryId }, validation: { warnings: [] } })
+        .response({ data: { id: deliveryId }, validation: { warnings: [] } })
         .code(HTTP_STATUS.CREATED)
         .header('x-request-id', traceId)
         .message('Successfully recorded an undocumented receipt')

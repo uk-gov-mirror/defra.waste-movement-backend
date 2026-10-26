@@ -22,7 +22,6 @@ const createCollection = {
   options: {
     description: 'Create a new waste collection',
     validate: {
-      payload: validateRequest('collection/create-collection-request'),
       params: validateRequest('collection/movement-id-params')
     },
     response: {
