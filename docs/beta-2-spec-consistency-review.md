@@ -31,7 +31,7 @@ Consistency check of the five beta-2 endpoints: they should use the same names a
 - [x] 13. Waste details on both receipt endpoints — no change: D8
 - [x] 14. Every object rejects unknown fields — D9, README updated in #248
 - [ ] 15. Addresses outside the UK and Ireland — needs a decision: O13
-- [ ] 16. EWC codes, POPs and hazardous declarations can disagree — needs decisions: O9, O14
+- [x] 16. EWC codes, POPs and hazardous declarations can disagree — accepted: D14. `HP_POP` vs POPs still open: O9
 - [ ] 17. Free-text fields have one length limit — two tiers agreed (O15), not applied yet
 - [ ] 18. Every `OTHER` enum value has an `other<Field>` — `supportingReferences[].label` has none: O16
 - [ ] Also found — mostly open: see the table
@@ -185,11 +185,11 @@ A waste item's `classification` has three signals that overlap, and the API does
 
 **How it got here.** #224 (DWTC-248) decided hazard from the EWC codes (`hasHazardousEwcCode`). #227 switched it to the `hazardous.isPresent` declaration (`isHazardous` in `src/common/helpers/waste-reference-data-checks.js`) and stopped using the EWC hazard flag at all. Tests now pin the result: a hazardous EWC code declared with `isPresent: false` is created without a consignment note and delivered with the non-hazardous movements, and a non-hazardous EWC code declared hazardous needs one (`create-movement.test.js`, `record-delivery.test.js`). Nothing in the schemas or the README says the EWC code's hazard flag is ignored.
 
-**To decide:**
+**Accepted (D14).** A hazardous EWC code with `hazardous.isPresent: false`, or the reverse, is allowed. The spec can't condition anything on an EWC code: whether a code is hazardous is in reference data too long to inline. The caller's `hazardous` declaration decides whether a movement is hazardous.
 
-- **Hazardous EWC code, `hazardous.isPresent: false`** (O14): reject, warn, or allow as now. Mirror codes are the case where allowing it is right, since a mirror code can be either; an absolute hazardous code can't be non-hazardous.
-- **`HP_POP` in `hazardous.codes`, `pops.isPresent: false`** (O9): the same kind of disagreement, between the hazardous and POPs declarations.
-- **Write the rule down**, whichever way it goes: say in `hazardous.isPresent`'s description and the README that it, not the EWC code, decides whether a movement is hazardous.
+**Still open:** `HP_POP` in `hazardous.codes` while `pops.isPresent` is `false` (O9). Unlike the EWC case, both declarations are in the schema, under `classification`, so the spec could reject it.
+
+**Still worth doing:** say in `hazardous.isPresent`'s description and the README that the declaration, not the EWC code, decides whether a movement is hazardous.
 
 **Related naming:** POP components are identified by `code`, checked against `GET /reference-data/pop-names`, whose entries have both a `code` and a `name`; only the `code` is accepted. Hazardous components are identified by `name`, as free text with no reference list. Say in `pop-component`'s `code` description that it's the entry's `code`, not its `name`.
 
@@ -263,6 +263,7 @@ There's no API decisions log yet, in this repo or in `digital-waste-tracking-doc
 | D11 | `hazardous` keeps its second flag, renamed `isComponentsNotApplicable` | #251 | Team |
 | D12 | "Movement" is capitalised as a domain name in descriptions | #242 (capitalise names) | Team |
 | D13 | An enum with an `OTHER` value has an `other<Field>` free-text field beside it, required only when the enum is `OTHER`. `otherMeansOfTransport` keeps its name | Same kind of exception to noun-first as `reasonForNo<Identifier>`; README | Team |
+| D14 | EWC codes and the `hazardous` declaration aren't cross-checked; the declaration decides whether a movement is hazardous | The spec can't condition on an EWC code's hazard flag, which is reference data | Team |
 
 ## Open items
 
@@ -281,7 +282,7 @@ There's no API decisions log yet, in this repo or in `digital-waste-tracking-doc
 | O11 | No `deliveryDateTime` on Delivery | Confirm whether it's deliberate | BA | Open |
 | O12 | Nest concentration as `{ amount, unit }` | Check with DWTC-223 first | Team | Open |
 | O13 | Overseas addresses (check 15) | Add `country` (ISO 3166-1 alpha-2); UK/Eircode `postcode` pattern only for `GB` and `IE`. Confirm which parties can be overseas, and whether `country` is required | BA / Team | Open |
-| O14 | Hazardous EWC code with `hazardous.isPresent: false` (check 16) | Decide whether to reject, warn or allow; allow for mirror codes. Document that the declaration decides | BA | Open |
+| O14 | Hazardous EWC code with `hazardous.isPresent: false` (check 16) | Allow; document that the declaration decides | Team | Decided: D14 |
 | O15 | Free-text length limits (check 17) | Two tiers: 255 short, 5000 long | Team | Agreed; to apply in its own PR |
 | O16 | `supportingReferences[].label` `OTHER` has no free text (check 18) | Add `otherLabel` | Team / BA | Open |
 
