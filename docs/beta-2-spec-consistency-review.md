@@ -16,7 +16,7 @@ Consistency check of the five beta-2 endpoints: they should use the same names a
 
 ## Status
 
-- [ ] 1. Same concept, same field name — in [#241](https://github.com/DEFRA/waste-movement-backend/pull/241), to be decided separately
+- [x] 1. Same concept, same field name — #241. The README now has two clashing "Field names" sections: see check 1
 - [x] 2. One enum casing convention — #240
 - [x] 3. One true/false naming pattern — #251
 - [ ] 4. "Reason for no…" fields — partly done in #246; broker or dealer example still open
@@ -33,7 +33,7 @@ Consistency check of the five beta-2 endpoints: they should use the same names a
 - [ ] 15. Addresses outside the UK and Ireland — needs a decision: O13
 - [x] 16. EWC codes, POPs and hazardous declarations can disagree — accepted: D14. `HP_POP` vs POPs still open: O9
 - [ ] 17. Free-text fields have one length limit — two tiers agreed (O15), not applied yet
-- [ ] 18. Every `OTHER` enum value has an `other<Field>` — `supportingReferences[].label` has none: O16
+- [x] 18. Every `OTHER` enum value has an `other<Field>` — rule in the README (#252); `supportingReferences[].otherLabel` added: O16
 - [ ] Also found — mostly open: see the table
 
 ---
@@ -42,20 +42,22 @@ Consistency check of the five beta-2 endpoints: they should use the same names a
 
 ### 1. Same concept, same field name
 
-**In [#241](https://github.com/DEFRA/waste-movement-backend/pull/241)**, to be decided separately.
+**Done in #241.**
 
 | Finding | Status |
 |---|---|
 | `receiver.siteName` where other parties have `organisationName` | Deliberate: see D1 |
 | `receiver.receiptAddress` where every other party and site has `address` | Needs a decision: part of O3, site naming |
-| `actualCollectionDateTime` (Collection) vs `receiptDateTime` (Receipt). The event already means it's the actual time, so the pattern is `<event>DateTime`. | #241 renames it to `collectionDateTime`. `plannedCollectionDateTime` on Creation keeps its prefix. |
-| `otherMeansOfTransport` sits beside `meansOfTransport`, but doesn't start with the noun it qualifies | Keep: it follows the `other<Field>` pattern (D13). **#241 renames it to `meansOfTransportDescription`; drop that rename from #241** |
+| `actualCollectionDateTime` (Collection) vs `receiptDateTime` (Receipt). The event already means it's the actual time, so the pattern is `<event>DateTime`. | Done in #241: renamed to `collectionDateTime`. #241 also renamed Creation's `plannedCollectionDateTime` to `collectionDateTime`, rather than keeping its prefix as proposed: the name doesn't say planned or actual, and each field's description does (D15). |
+| `otherMeansOfTransport` sits beside `meansOfTransport`, but doesn't start with the noun it qualifies | Kept, as the `other<Field>` pattern (D13, #252). #241 merged without the `meansOfTransportDescription` rename |
 
-#241 also adds the naming rules to the README: noun first for siblings, `<event>DateTime` for event times, and the known exceptions (`siteName`, `receiptAddress`, the `reasonForNoX` family). Its table of noun-first examples lists `meansOfTransportDescription`; take that row out too.
+#241 also added a "Field names: same concept, same name" section to the README, with the known exceptions (`siteName`, `receiptAddress`, `otherMeansOfTransport`, the `reasonForNoX` family).
+
+**Open: the README now has two "Field names" sections that disagree.** The earlier "Field names" section (from #248) still says "A time that hasn't happened yet keeps its qualifier: `planned<Event>DateTime`", which #241 reversed, and its noun-first example still lists `<noun>Description`. Merge #241's section into it, so there's one set of naming rules, and drop the `planned<Event>DateTime` sentence.
 
 The `reasonForNoX` family (`reasonForNoRegistrationNumber`, `reasonForNoAuthorisationNumber`, `reasonForNoCode`, `reasonForNoDeliveryId`) breaks the noun-first rule, but consistently, so renaming them is all or nothing. → Needs a decision: see O5.
 
-The `other<Field>` family is the same kind of exception, and is kept on purpose (D13): when an enum has an `OTHER` value, `other<Field>` beside it holds the free text, required when the enum is `OTHER` and not allowed otherwise. The README documents it next to `reasonForNo<Identifier>`. `otherMeansOfTransport` is the only one so far; `supportingReferences[].label` has an `OTHER` with no `otherLabel` (check 18). #241 lists it as a known exception in the meantime.
+The `other<Field>` family is the same kind of exception, and is kept on purpose (D13): when an enum has an `OTHER` value, `other<Field>` beside it holds the free text, required when the enum is `OTHER` and not allowed otherwise. The README documents it next to `reasonForNo<Identifier>`. There are two: `carrier.otherMeansOfTransport` and `supportingReferences[].otherLabel` (check 18).
 
 ### 2. One enum casing convention
 
@@ -101,7 +103,7 @@ The `other<Field>` family is the same kind of exception, and is kept on purpose 
 
 - `creation/create-movement-request.schema.json`, `consignmentNote`: "Replaces hazardousWasteConsignmentCode and reasonForNoConsignmentCode." → Remove the sentence.
 
-#241 and #243 rename fields that descriptions mention (e.g. the carrier description names `otherMeansOfTransport`). Run the check again after each merges.
+#243 renames a field that descriptions may mention. Run the check again after it merges.
 
 ---
 
@@ -201,7 +203,7 @@ Of the 19 free-text request fields (a plain string, with no `pattern`, `enum` or
 |---|---|
 | `specialHandlingRequirements` | 500. The legacy API's `LONG_STRING_MAX_LENGTH` (`waste-movement-utils`) is 5000 |
 | `supportingReferences[].reference` | 50 |
-| `organisationName` (carrier, broker or dealer, producer Commercial and Municipal), `receiver.siteName`, `address.fullAddress`, `carrier.vehicleRegistration`, `carrier.otherMeansOfTransport`, `classification.wasteDescription`, `hazardous-component.name`, `pop-component.code`, `reasonForNoRegistrationNumber` (broker or dealer), `reasonForNoAuthorisationNumber` (×2), `consignmentNote.reasonForNoCode`, `reasonForNoDeliveryId` | none |
+| `organisationName` (carrier, broker or dealer, producer Commercial and Municipal), `receiver.siteName`, `address.fullAddress`, `carrier.vehicleRegistration`, `carrier.otherMeansOfTransport`, `supportingReferences[].otherLabel`, `classification.wasteDescription`, `hazardous-component.name`, `pop-component.code`, `reasonForNoRegistrationNumber` (broker or dealer), `reasonForNoAuthorisationNumber` (×2), `consignmentNote.reasonForNoCode`, `reasonForNoDeliveryId` | none |
 
 Every one has `minLength: 1`. Fields with a `pattern` (postcode, phone number, SIC code, registration and authorisation numbers, consignment code, EWC code, IDs) are already bounded by it. `issue.pointer` and `issue.message` are in the response, so they're out of scope.
 
@@ -209,7 +211,7 @@ Every one has `minLength: 1`. Fields with a `pattern` (postcode, phone number, S
 
 | Tier | `maxLength` | Fields |
 |---|---|---|
-| Short text | 255 | names, references, `reasonForNo…` fields, `vehicleRegistration`, component `name` and `code` |
+| Short text | 255 | names, references, `reasonForNo…` fields, `vehicleRegistration`, `otherLabel`, component `name` and `code` |
 | Long text | 5000, as the legacy API | `wasteDescription`, `fullAddress`, `specialHandlingInstructions`, `otherMeansOfTransport` |
 
 To apply it, in its own PR:
@@ -217,7 +219,7 @@ To apply it, in its own PR:
 - Add a "Free text has a length limit" section to the README naming the two tiers, and say in each field's description which one it is.
 - Set `maxLength` on every field above. `supportingReferences[].reference` rises from 50 to 255 and `specialHandlingInstructions` from 500 to 5000, unless either 50 or 500 was deliberate; check before changing them.
 - Add a `conventions.test.js` check that every beta-2 request string without a `pattern`, `enum`, `const` or `format` has a `maxLength` of 255 or 5000.
-- #241 and #243 rename two of these fields; apply the limits to whichever names have merged.
+- #243 renames `specialHandlingRequirements`; apply the limit to whichever name has merged.
 
 ### 18. Every `OTHER` enum value has an `other<Field>`
 
@@ -226,11 +228,11 @@ The README's new `other<Field>` rule (D13): an enum that ends with `OTHER` has a
 | Enum | `OTHER` free text | Status |
 |---|---|---|
 | `carrier.meansOfTransport` | `otherMeansOfTransport` | Follows it |
-| `supportingReferences[].label` | none | Open: O16 |
+| `supportingReferences[].label` | `otherLabel` | Follows it (O16) |
 
-`supportingReferences[]` is a `label` / `reference` pair, so with `OTHER` the caller sends a reference with no way to say what kind it is. Add `otherLabel` (short text, check 17), required when `label` is `OTHER`. Or, if `reference` alone is enough there, record that as a decision instead.
+`supportingReferences[]` is a `label` / `reference` pair, so with `OTHER` the caller sent a reference with no way to say what kind it is. `otherLabel` (short text, check 17) is now required when `label` is `OTHER` and not allowed otherwise.
 
-A `conventions.test.js` check could fail any enum containing `OTHER` whose parent has no `other<Field>`.
+`conventions.test.js` now fails on any beta-2 enum containing `OTHER` with no `other<Field>` beside it, required when the enum is `OTHER` and not allowed otherwise.
 
 ### Also found
 
@@ -264,6 +266,7 @@ There's no API decisions log yet, in this repo or in `digital-waste-tracking-doc
 | D12 | "Movement" is capitalised as a domain name in descriptions | #242 (capitalise names) | Team |
 | D13 | An enum with an `OTHER` value has an `other<Field>` free-text field beside it, required only when the enum is `OTHER`. `otherMeansOfTransport` keeps its name | Same kind of exception to noun-first as `reasonForNo<Identifier>`; README | Team |
 | D14 | EWC codes and the `hazardous` declaration aren't cross-checked; the declaration decides whether a movement is hazardous | The spec can't condition on an EWC code's hazard flag, which is reference data | Team |
+| D15 | Planned and actual collection times are both `collectionDateTime` (Creation and Collection); the description says which | #241 | Team |
 
 ## Open items
 
@@ -273,7 +276,7 @@ There's no API decisions log yet, in this repo or in `digital-waste-tracking-doc
 | O2 | True/false naming | `is` prefix | Team | Done: #251 |
 | O3 | Site naming: `collectionSite`, receiver site, delivery site | Keep `collectionSite`. Rename `receiver.receiptAddress` to `address`. There's no delivery site today, so add one only if Delivery needs one. | Team | Open |
 | O4 | Broker or dealer "reason for no registration number" values | — | BA / policy | Open |
-| O5 | Rename the `reasonForNoX` family noun-first | All four or none | Team | Open; listed as an exception in #241 |
+| O5 | Rename the `reasonForNoX` family noun-first | All four or none | Team | Open; listed as an exception in the README (#241) |
 | O6 | `brokerOrDealer` → `brokersOrDealers` | #243 keeps the singular name as an exception | Team | In #243 |
 | O7 | Receiver has no "reason for no authorisation number" | Confirm a receiving site always has a permit or exemption | BA / policy | Open |
 | O8 | Carrier and broker or dealer `address` optional; producer, receiver and site required | Record as deliberate if confirmed | BA | Open |
@@ -284,7 +287,7 @@ There's no API decisions log yet, in this repo or in `digital-waste-tracking-doc
 | O13 | Overseas addresses (check 15) | Add `country` (ISO 3166-1 alpha-2); UK/Eircode `postcode` pattern only for `GB` and `IE`. Confirm which parties can be overseas, and whether `country` is required | BA / Team | Open |
 | O14 | Hazardous EWC code with `hazardous.isPresent: false` (check 16) | Allow; document that the declaration decides | Team | Decided: D14 |
 | O15 | Free-text length limits (check 17) | Two tiers: 255 short, 5000 long | Team | Agreed; to apply in its own PR |
-| O16 | `supportingReferences[].label` `OTHER` has no free text (check 18) | Add `otherLabel` | Team / BA | Open |
+| O16 | `supportingReferences[].label` `OTHER` has no free text (check 18) | Add `otherLabel` | Team / BA | Done |
 
 ## Out of scope
 
@@ -306,4 +309,4 @@ The ticket puts response and error shapes, alignment with the docs site, and cha
 - `src/test/utils/createMovementRequest.js`
 - `test/integration/beta-2.test.js`
 
-As of this review, `waste-movement-external-api`, `digital-waste-tracking-uat` and `waste-tracking-service` don't use `actualCollectionDateTime`. They do use `otherMeansOfTransport` and `specialHandlingRequirements`, but only as the legacy Receipt API's own fields, which beta-2 renames don't change. Check them again before #241 and #243 merge.
+As of this review, `waste-movement-external-api`, `digital-waste-tracking-uat` and `waste-tracking-service` use `specialHandlingRequirements` only as the legacy Receipt API's own field, which beta-2 renames don't change. Check them again before #243 merges.
